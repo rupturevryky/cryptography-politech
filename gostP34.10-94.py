@@ -6,17 +6,20 @@ def textToNumbers(text):
     for i in range(len(text)):
         res.append(alf.find(text[i])+1)
     return res
+    
 def tchk_zpt(n): #Замена символов на буквы
     n = n.replace('.','тчк')
     n = n.replace(',','зпт')
     n = n.lower()
     return n
+
 def hesh(text, module):
     text = textToNumbers(text)
     iters = [0]
     for i in range(len(text)):
         iters.append(((iters[i] + text[i])**2)%module)
     return iters[len(text)]
+
 def is_prime(n):
     flag = 0
     for i in range(2, int(n**(0.5))):
@@ -24,6 +27,7 @@ def is_prime(n):
             flag = 1
     if flag == 1: return False
     else: return True
+
 def check_params(p, q, a, x = 2):
     if not is_prime(p):
         print('Неверное p, введите еще раз, оно должно быть простым')
@@ -38,6 +42,7 @@ def check_params(p, q, a, x = 2):
          print(f'Неверное x, введите еще раз, оно должно быть меньше {q} и больше 1')
          return False
     return True
+
 def generate_signature(text, p, q, a, x, k):
     res = []
     y = (a**x)%p
@@ -48,6 +53,7 @@ def generate_signature(text, p, q, a, x, k):
     res.append(r)
     res.append(s)
     return f'Подпись: {res}, Y = {y}'
+
 def check_signature(text, r, s, p, q, a, y):
     res = ''
     v = (text**(q-2))%q
