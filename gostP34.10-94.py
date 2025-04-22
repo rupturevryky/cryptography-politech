@@ -70,7 +70,8 @@ def main():
     if what_to_do == 1:
         text = str(input("Введите открытый текст: "))
         while True:
-            p = int(input("Введите большое простое p: "))
+            p = int(input("Введите простое p больше или равное 31: "))
+            if (p < 31): continue
             print('Возможный вариант для q: ')
             counter = 0
             for i in range(3, 100):
