@@ -1,140 +1,268 @@
-def get_r1():
-    while True:
-        rstr = input("Введите ключ 64 символа 0 и 1: ")
-        
-        if len(rstr) != 64:
-            print("Ключ должен быть 64 символов")
-            continue
-        
-        if not all(char in '01' for char in rstr):
-            print("Ключ должен состоять только из 1 и 0")
-            continue
-        r1 = [0]*19
-        r2 = [0]*22
-        r3 = [0]*23
+import sys
 
+class A5_1:
+    MASK_R1 = (1 << 19) - 1
+    MASK_R2 = (1 << 22) - 1
+    MASK_R3 = (1 << 23) - 1
+
+    R1_CLK = 8
+    R2_CLK = 10
+    R3_CLK = 10
+
+    def __init__(self, key=0, frame=0):
+        self.R1 = 0
+        self.R2 = 0
+        self.R3 = 0
+        self.initialize(key, frame)
+
+    def majority_bit(self, x, y, z):
+        return (x & y) | (x & z) | (y & z)
+
+    def clock_lfsr(self, reg, mask, feedback_taps):
+        feedback = reg & feedback_taps
+        new_bit = 0
+        while feedback:
+            new_bit ^= (feedback & 1)
+            feedback >>= 1
+        reg = ((reg << 1) & mask) | new_bit
+        return reg
+
+    def initialize(self, key, frame=0):
         for i in range(64):
-            r1t = r1[18]^r1[17]^r1[16]^r1[13]^int(rstr[i]) # xot byte
-            r1p = r1[18]
-            r1.insert(0,r1t)
-            r1.pop(19)
+            key_bit = (key >> i) & 1
+            self.R1 ^= key_bit
+            self.R2 ^= key_bit
+            self.R3 ^= key_bit
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-            r2t = r2[21]^r2[20]^int(rstr[i]) # xot byte
-            r2p = r2[21]
-            r2.insert(0,r2t)
-            r2.pop(22)
-        
-        #work with r3
-        
-            r3t = r3[22]^r3[21]^r3[20]^r3[7]^int(rstr[i]) # xot byte
-            r3p = r3[22]
-            r3.insert(0,r3t)
-            r3.pop(23)
-            
-        print(r1)
-        print(r2)
-        print(r3)
+        for i in range(22):
+            frame_bit = (frame >> i) & 1
+            self.R1 ^= frame_bit
+            self.R2 ^= frame_bit
+            self.R3 ^= frame_bit
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-        break
-    return r1,r2,r3
-        
-# ключ 1011111010010100010110101010101110100100101001010101101010101101         
+        for _ in range(100):
+            b1 = (self.R1 >> self.R1_CLK) & 1
+            b2 = (self.R2 >> self.R2_CLK) & 1
+            b3 = (self.R3 >> self.R3_CLK) & 1
+            maj = self.majority_bit(b1, b2, b3)
 
-r1, r2, r3 = get_r1()
+            if b1 == maj:
+                self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            if b2 == maj:
+                self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            if b3 == maj:
+                self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-def gamma(r1,r2,r3):
+    def get_keystream_bit(self):
+        b1 = (self.R1 >> self.R1_CLK) & 1
+        b2 = (self.R2 >> self.R2_CLK) & 1
+        b3 = (self.R3 >> self.R3_CLK) & 1
+        maj = self.majority_bit(b1, b2, b3)
 
-    for i in range(100):
+        if b1 == maj:
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+        if b2 == maj:
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+        if b3 == maj:
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-        F = (r1[8] and r2[10]) or (r1[8]and r3[10]) or (r2[10] and r3[10])
+        return (self.R1 >> 18) ^ (self.R2 >> 21) ^ (self.R3 >> 22) & 1
 
-        if r1[8] == F:
-            r1t = r1[18]^r1[17]^r1[16]^r1[13] # xot byte
-            r1.insert(0,r1t)
-            r1.pop(19)
+    def encrypt_byte(self, byte):
+        result = 0
+        for bit_index in range(7, -1, -1):
+            keystream_bit = self.get_keystream_bit()
+            result |= ((byte >> bit_index) & 1) ^ keystream_bit << bit_index
+        return result
 
-        if r2[10] == F:
-            r2t = r2[21]^r2[20] # xot byte
-            r2.insert(0,r2t)
-            r2.pop(22)
 
-        if r3[10] == F:
-            r3t = r3[22]^r3[21]^r3[20]^r3[7] # xot byte
-            r3.insert(0,r3t)
-            r3.pop(23)
+class A5_2:
+    MASK_R1 = (1 << 19) - 1
+    MASK_R2 = (1 << 22) - 1
+    MASK_R3 = (1 << 23) - 1
+    MASK_R4 = (1 << 17) - 1
 
-        
+    R4_CLK1 = 3
+    R4_CLK2 = 7
+    R4_CLK3 = 10
 
-    gam = []
-        
-    for i in range(114):
-        F = (r1[8] and r2[10]) or (r1[8]and r3[10]) or (r2[10] and r3[10])
+    def __init__(self, key=0, frame=0):
+        self.R1 = self.R2 = self.R3 = self.R4 = 0
+        self.last_output_bit = 0
+        self.initialize(key, frame)
 
-        if r1[8] == F:
-            r1t = r1[18]^r1[17]^r1[16]^r1[13] # xot byte
-            r1.insert(0,r1t)
-            r1.pop(19)
+    def majority_bit(self, x, y, z):
+        return (x & y) | (x & z) | (y & z)
 
-        if r2[10] == F:
-            r2t = r2[21]^r2[20] # xot byte
-            r2.insert(0,r2t)
-            r2.pop(22)
+    def clock_lfsr(self, reg, mask, feedback_taps):
+        feedback = reg & feedback_taps
+        new_bit = 0
+        while feedback:
+            new_bit ^= (feedback & 1)
+            feedback >>= 1
+        reg = ((reg << 1) & mask) | new_bit
+        return reg
 
-        if r3[10] == F:
-            r3t = r3[22]^r3[21]^r3[20]^r3[7] # xot byte
-            r3.insert(0,r3t)
-            r3.pop(23)
 
-        gam.append(r1[19]^r2[21]^r3[22])
 
-    return gam
+    def initialize(self, key, frame=0):
+        for i in range(64):
+            key_bit = (key >> i) & 1
+            self.R1 ^= key_bit
+            self.R2 ^= key_bit
+            self.R3 ^= key_bit
+            self.R4 ^= key_bit
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
+            self.R4 = self.clock_lfsr(self.R4, self.MASK_R4, (1 << 16) | (1 << 11))
 
-r1 =[1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1]
+        for i in range(22):
+            frame_bit = (frame >> i) & 1
+            self.R1 ^= frame_bit
+            self.R2 ^= frame_bit
+            self.R3 ^= frame_bit
+            self.R4 ^= frame_bit
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
+            self.R4 = self.clock_lfsr(self.R4, self.MASK_R4, (1 << 16) | (1 << 11))
 
-'''
-r1 = get_r1()
+        for _ in range(99):
+            self.R4 = self.clock_lfsr(self.R4, self.MASK_R4, (1 << 16) | (1 << 11))
+            x = (self.R4 >> self.R4_CLK1) & 1
+            y = (self.R4 >> self.R4_CLK2) & 1
+            z = (self.R4 >> self.R4_CLK3) & 1
+            maj = self.majority_bit(x, y, z)
 
-r2 = get_r2()
+            if ((self.R4 >> self.R4_CLK3) & 1) == maj:
+                self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+            if ((self.R4 >> self.R4_CLK1) & 1) == maj:
+                self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+            if ((self.R4 >> self.R4_CLK2) & 1) == maj:
+                self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-r3 = get_r3()
+        self.last_output_bit = 0
 
-'''
+    def get_keystream_bit(self):
+        self.R4 = self.clock_lfsr(self.R4, self.MASK_R4, (1 << 16) | (1 << 11))
+        x = (self.R4 >> self.R4_CLK1) & 1
+        y = (self.R4 >> self.R4_CLK2) & 1
+        z = (self.R4 >> self.R4_CLK3) & 1
+        maj = self.majority_bit(x, y, z)
 
-def encrypt_message(message, binary_array):
-    encrypted_array = []
-    
-    for i, char in enumerate(message):
-        # Преобразуем символ в его ASCII код и затем в двоичное представление
-        ascii_value = ord(char)
-        # Выполняем XOR с элементом массива
-        xor_result = ascii_value ^ binary_array[i]
-        # Добавляем результат в новый массив в двоичном формате
-        encrypted_array.append(format(xor_result, '08b'))  # 8-битное представление
-        
-    return encrypted_array
+        if ((self.R4 >> self.R4_CLK3) & 1) == maj:
+            self.R1 = self.clock_lfsr(self.R1, self.MASK_R1, (1 << 18) | (1 << 17) | (1 << 16) | (1 << 13))
+        if ((self.R4 >> self.R4_CLK1) & 1) == maj:
+            self.R2 = self.clock_lfsr(self.R2, self.MASK_R2, (1 << 21) | (1 << 20))
+        if ((self.R4 >> self.R4_CLK2) & 1) == maj:
+            self.R3 = self.clock_lfsr(self.R3, self.MASK_R3, (1 << 22) | (1 << 21) | (1 << 20) | (1 << 7))
 
-def decrypt_message(encrypted_array, binary_array):
-    decrypted_message = ""
-    
-    for i, binary_str in enumerate(encrypted_array):
-        # Преобразуем двоичную строку в число
-        xor_result = int(binary_str, 2)
-        # Выполняем XOR с элементом массива обратно, чтобы получить ASCII код
-        ascii_value = xor_result ^ binary_array[i]
-        # Преобразуем ASCII код обратно в символ и добавляем к результату
-        decrypted_message += chr(ascii_value)
-        
-    return decrypted_message
+        topR1 = (self.R1 >> 18) & 1
+        topR2 = (self.R2 >> 21) & 1
+        topR3 = (self.R3 >> 22) & 1
 
-# Пример использования
-message = input("Введите сообщение: ")
-binary_array = gamma(r1,r2,r3)
-print(binary_array)
-# Шифруем сообщение
-encrypted = encrypt_message(message, binary_array)
-print("Зашифрованное сообщение:", encrypted)
+        b1_R1 = (self.R1 >> 15) & 1
+        b2_R1 = (self.R1 >> 14) & 1
+        b3_R1 = (self.R1 >> 12) & 1
+        majR1 = self.majority_bit(b1_R1, b2_R1 ^ 1, b3_R1)
 
-# Расшифровываем сообщение
-decrypted = decrypt_message(encrypted, binary_array)
-print("Расшифрованное сообщение:", decrypted)
+        b1_R2 = (self.R2 >> 16) & 1
+        b2_R2 = (self.R2 >> 13) & 1
+        b3_R2 = (self.R2 >> 9) & 1
+        majR2 = self.majority_bit(b1_R2 ^ 1, b2_R2, b3_R2)
 
+        b1_R3 = (self.R3 >> 18) & 1
+        b2_R3 = (self.R3 >> 16) & 1
+        b3_R3 = (self.R3 >> 13) & 1
+        majR3 = self.majority_bit(b1_R3, b2_R3, b3_R3 ^ 1)
+
+        new_output = topR1 ^ topR2 ^ topR3 ^ majR1 ^ majR2 ^ majR3
+
+        output_bit = self.last_output_bit
+        self.last_output_bit = new_output
+        return output_bit
+
+    def encrypt_byte(self, byte):
+        result = 0
+        for bit_index in range(7, -1, -1):
+            keystream_bit = self.get_keystream_bit()
+            result |= ((byte >> bit_index) & 1) ^ keystream_bit << bit_index
+        return result
+
+
+
+def bin_to_letters(bin_str, rus_alphabet):
+    result = []
+    for i in range(0, len(bin_str), 5):
+        chunk = bin_str[i:i + 5]
+        index = int(chunk, 2)
+        if index < len(rus_alphabet):
+            result.append(rus_alphabet[index])
+        else:
+            result.append('?')
+    return ''.join(result)
+
+
+def a5():
+    print("Введите сообщение:")
+    test_data = input()
+
+    print("Введите ключ (64-битное число в двоичном формате):")
+    key_binary = input().strip()
+    key = int(key_binary, 2)
+
+    frame = 0
+
+    algos = [
+        {"name": "A5/1", "type": 1},
+        {"name": "A5/2", "type": 2}
+    ]
+
+    rus_alphabet = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+
+    for algo in algos:
+        print("Тестирование алгоритма {}...".format(algo["name"]))
+
+        letter_bin = ""
+        for ch in test_data:
+            pos = rus_alphabet.find(ch)
+            if pos != -1:
+                bits = format(pos, '05b')
+                letter_bin += bits
+
+        gamma = ""
+        if algo["type"] == 1:
+            cipher = A5_1(key, frame)
+        else:
+            cipher = A5_2(key, frame)
+
+        for _ in letter_bin:
+            bit = cipher.get_keystream_bit()
+            gamma += str(bit)
+
+        xor_result = ''.join('0' if letter_bin[i] == gamma[i] else '1' for i in range(len(letter_bin)))
+
+        cipher_text = bin_to_letters(xor_result, rus_alphabet)
+
+        decrypted_bin = ''.join('0' if xor_result[i] == gamma[i] else '1' for i in range(len(xor_result)))
+        decrypted_text = bin_to_letters(decrypted_bin, rus_alphabet)
+
+        print("Исходный текст:                        {}".format(test_data))
+        print("Бинарное представление букв:           {}".format(letter_bin))
+        print("Гамма:                                 {}".format(gamma))
+        print("Результат XOR (бинарный):              {}".format(xor_result))
+        print("Результат XOR (буквенный, шифротекст): {}".format(cipher_text))
+        print("Расшифрованный текст (бинарный):       {}".format(decrypted_bin))
+        print("Расшифрованный текст (буквенный):      {}".format(decrypted_text))
+        print()
+
+
+
+#1010101010101010101010101010101010101010101010101010101010101010

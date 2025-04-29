@@ -103,7 +103,7 @@ def encrypt(message: str, keys: List[str]) -> str:
 Возвращает зашифрованное сообщение"""
 
 
-def network():
+def feistel():
     choice = int(input("Зашифровать - 1 или расшифровать - 2 "))
     message = input("Введите сообщение: ")
     key = input("Введите ключ: ")
@@ -116,6 +116,3 @@ def network():
         keys.reverse()
         decrypt_message = encrypt(message, keys)
         print(f'decrypt {decrypt_message}')
-
-if __name__ == '__main__':
-    network()

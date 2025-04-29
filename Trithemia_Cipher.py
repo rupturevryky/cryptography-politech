@@ -3,20 +3,13 @@ def trithemius_encrypt(text):
     shift = 0
     
     for char in text.upper():
-        # Пропуск пробелов
         if not char.isalpha():
             result += char
             continue
             
-        # Находим позицию буквы в алфавите (A=0, B=1, ..., Я=31)
         pos = ord(char) - ord('А')
-        
-        # Вычисляем новый сдвиг
         new_pos = (pos + shift) % 32
-        
-        # Получаем зашифрованную букву
         encrypted_char = chr(new_pos + ord('А'))
-        
         result += encrypted_char
         shift = (shift + 1) % 32
     
@@ -27,26 +20,19 @@ def trithemius_decrypt(text):
     shift = 0
     
     for char in text.upper():
-        # Пропуск пробелов
         if not char.isalpha():
             result += char
             continue
             
-        # Находим позицию буквы в алфавите
         pos = ord(char) - ord('А')
-        
-        # Вычисляем обратный сдвиг
         new_pos = (pos - shift + 32) % 32
-        
-        # Получаем расшифрованную букву
         decrypted_char = chr(new_pos + ord('А'))
-        
         result += decrypted_char
         shift = (shift + 1) % 32
     
     return result
 
-def main():
+def The_Trithemia_Cipher():
     while True:
         print("\nШифр Тритемия")
         print("1. Зашифровать текст")
@@ -68,6 +54,3 @@ def main():
             print(f"Расшифрованный текст: {decrypted}")
         else:
             print("Неверный выбор")
-
-if __name__ == "__main__":
-    main()

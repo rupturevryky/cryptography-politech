@@ -1,5 +1,5 @@
 import math
-import random
+# import random
 
 
 def is_prime(n):
@@ -106,7 +106,7 @@ def get_e_input(phi_n):
             print("Пожалуйста, введите целое число.")
 
 
-def main():
+def RSA():
     # Ввод простых чисел с проверкой минимального произведения
     while True:
         p = get_prime_input("Введите первое простое число p (минимум 3): ", 3)
@@ -138,10 +138,10 @@ def main():
     try:
         d = modinv(e, phi_n)
         if d == e:
-            print("Секретная экспонента d не должна быть равна открытой экспоненте e.")
+            print("Секретный ключ d не должна быть равна открытой экспоненте e.")
             print("Пожалуйста, выберите другое значение для e.")
             return
-        print(f"\nСекретная экспонента d = {d}")
+        print(f"\nСекретный ключ d = {d}")
     except Exception:
         print("Не удалось вычислить обратный элемент для e")
         return
@@ -160,6 +160,3 @@ def main():
     except Exception as e:
         print("Ошибка:", str(e))
 
-
-if __name__ == "__main__":
-    main()

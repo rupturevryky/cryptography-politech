@@ -64,7 +64,7 @@ def check_signature(text, r, s, p, q, a, y):
         res += str(r)
     return res
 
-def main():
+def gost_P_34_10_94():
     print("ЭЦП ГОСТ Р 34.10-94")
     what_to_do = int(input('Что делать? (подписать - 1, проверить подпись  - 2):'))
     if what_to_do == 1:
@@ -122,8 +122,6 @@ def main():
             r = int(input("Введите r (первый параметр подписи): "))
             s = int(input("Введите s (второй параметр подписи): "))
             print(check_signature(text, r, s, p, q, a, y))
-
-main()
 """
 Что делать? (подписать - 1, проверить подпись  - 2):1
 Введите открытый текст: невсекотумасленицазптбудетивеликийпосттчк

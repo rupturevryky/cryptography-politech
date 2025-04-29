@@ -80,16 +80,19 @@ def matrix_chifr(crypto_text, key, k=0):
     return matrix_d_crypto
 
 
+def matrix_chifr_introduction():
+    n = 0
+    input_text = input("введите текст: ").lower()
+    key_lenght = int(input("введите ключ (размер матрицы, напрмер 3): "))
+    matrix_m = []
+    print("Выберите Матрицу размером ", key_lenght)
+    for i in range(key_lenght):
+        m = list(map(int, input().split()))
+        matrix_m.append(m)
+    print("Матричный шифр:")
+    crypto_encrypto = matrix_chifr(input_text, matrix_m)
+    print("Зашифрованное сообщение: ", *crypto_encrypto)
+    crypto_descript = matrix_chifr(crypto_encrypto, matrix_m, k=1)
+    print("Расшифрованное сообщение: ", ''.join(crypto_descript)[0:len(crypto_descript) - n])
 
-n = 0
-input_text = input("введите текст: ").lower()
-key_lenght = int(input("введите ключ: "))
-matrix_m = []
-for i in range(key_lenght):
-    m = list(map(int, input().split()))
-    matrix_m.append(m)
-print("Матричный шифр:")
-crypto_encrypto = matrix_chifr(input_text, matrix_m)
-print("Зашифрованное сообщение: ", *crypto_encrypto)
-crypto_descript = matrix_chifr(crypto_encrypto, matrix_m, k=1)
-print("Расшифрованное сообщение: ", ''.join(crypto_descript)[0:len(crypto_descript) - n])
+# , 

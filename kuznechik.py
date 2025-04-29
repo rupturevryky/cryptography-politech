@@ -245,7 +245,7 @@ def split_key(string, chunk_size):
 
 """Функция разделяет шестнадцатеричный ключ на части заданного размера."""
 
-def main():
+def kuznechik():
     key = split_key(input("Введите ключ: "), 32)
     temp = input("Введите сообщение в формате hex: ")
 
@@ -254,10 +254,6 @@ def main():
 
     deshifr = kuznechik_decrypt(shifr, key)
     print('DESHIFR =', ''.join([x[2:] for x in deshifr]))
-
-
-if __name__ == "__main__":
-    main()
 
 # 8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef - ключ 
 # 1122334455667700ffeeddccbbaa9988 - сообщение

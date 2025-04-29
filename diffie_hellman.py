@@ -35,7 +35,7 @@ def validate_keys(a, n, Ka, Kb, Ya, Yb, shared_secret_A, shared_secret_B):
     return errors
 
 
-def main():
+def diffie_hellman():
     # Ввод параметров
     while True:
         try:
@@ -102,7 +102,3 @@ def main():
     else:
         print("\nПроверка пройдена успешно!")
         print(f"Общий секретный ключ: {shared_secret_A}")
-
-
-if __name__ == "__main__":
-    main()

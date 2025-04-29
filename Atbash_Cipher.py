@@ -8,7 +8,7 @@ lookup_table = {
     'Ю': 'Б', 'Я': 'А'
 }
 
-def atbash_cipher(text):
+def cipher(text):
     """Функция для шифрования/расшифрования текста"""
     result = ""
     for char in text.upper():
@@ -18,7 +18,7 @@ def atbash_cipher(text):
             result += char
     return result
 
-def main():
+def Atbash_Cipher():
     """Основная функция программы"""
     print("Программа шифрования/расшифрования Атбаш")
     print("----------------------------------------")
@@ -43,10 +43,7 @@ def main():
                 print("Ошибка: текст должен содержать хотя бы одну русскую букву!")
                 continue
                 
-            result = atbash_cipher(text)
+            result = cipher(text)
             print(f"\nРезультат: {result}")
         else:
             print("\nОшибка: выберите действие от 1 до 3!")
-
-if __name__ == "__main__":
-    main()

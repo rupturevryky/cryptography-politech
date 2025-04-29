@@ -109,34 +109,34 @@ class RSASignature:
 
         return hash_value == recovered_hash
 
+def RSA_ds():
+    # Пример использования
+    rsa = RSASignature()
 
-# Пример использования
-rsa = RSASignature()
+    try:
+        # Получаем простые числа от пользователя
+        p = int(input("Введите первое простое число p: "))
+        q = int(input("Введите второе простое число q: "))
 
-try:
-    # Получаем простые числа от пользователя
-    p = int(input("Введите первое простое число p: "))
-    q = int(input("Введите второе простое число q: "))
+        # Генерируем ключи с использованием введенных чисел
+        print("\nГенерация пары ключей...")
+        public_key, private_key = rsa.generate_keys_manual(p, q)
 
-    # Генерируем ключи с использованием введенных чисел
-    print("\nГенерация пары ключей...")
-    public_key, private_key = rsa.generate_keys_manual(p, q)
+        print(f"\nОткрытый ключ (n, e): {public_key}")
+        print(f"Закрытый ключ (d): {private_key}")
 
-    print(f"\nОткрытый ключ (n, e): {public_key}")
-    print(f"Закрытый ключ (d): {private_key}")
+        # Получаем сообщение для подписи
+        message = input("\nВведите сообщение для подписи: ")
 
-    # Получаем сообщение для подписи
-    message = input("\nВведите сообщение для подписи: ")
+        # Создание подписи
+        signature = rsa.sign_message(message)
+        print(f"\nСоздана подпись: {signature}")
 
-    # Создание подписи
-    signature = rsa.sign_message(message)
-    print(f"\nСоздана подпись: {signature}")
+        # Проверка подписи
+        is_valid = rsa.verify_signature(message, signature)
+        print(f"\nПроверка подписи для исходного сообщения: {is_valid}")
 
-    # Проверка подписи
-    is_valid = rsa.verify_signature(message, signature)
-    print(f"\nПроверка подписи для исходного сообщения: {is_valid}")
-
-except ValueError as e:
-    print(f"\nОшибка: {str(e)}")
-except Exception as e:
-    print(f"\nПроизошла ошибка: {str(e)}")
+    except ValueError as e:
+        print(f"\nОшибка: {str(e)}")
+    except Exception as e:
+        print(f"\nПроизошла ошибка: {str(e)}")
